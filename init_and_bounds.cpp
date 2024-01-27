@@ -99,7 +99,7 @@ c_Sim::c_Sim(string filename_solo, string speciesfile_solo, string workingdir, s
         // old notation.
         if (T_int==0) 
             T_int        = read_parameter_from_file<double>(filename,"PARI_TPLANET", debug, 0.).value; //Internal planetary temperature at inner boundary. T_int in Guillot2010. in K.
-
+        cout<<"Internal Temperature initialized: "<<T_int<<endl;
         use_planetary_temperature = read_parameter_from_file<int>(filename,"USE_PLANET_TEMPERATURE", debug, 0).value;//Add the T_int heating to the lower boundary cell?
         core_cv          = read_parameter_from_file<double>(filename,"PARI_CORE_CV", debug, 0).value; //Heat capacity of the core 
         T_planet         = read_parameter_from_file<double>(filename,"PARI_TPLANET_INIT", debug, 0).value; //To be unused?
@@ -382,11 +382,11 @@ c_Sim::c_Sim(string filename_solo, string speciesfile_solo, string workingdir, s
 
       if(wavebinsfile.compare("---")!=0) { //NOTE: Wavebins boundaries given in micrometers! This is consistent with other data given in *opa files and the fluxfile
 
-            double tempenergy = 0.;
-            int cnt = 0;
+            //double tempenergy = 0.;
+            //int cnt = 0;
 
-            double flux;
-            double lam;
+            //double flux;
+            //double lam;
 
             ifstream file(wavebinsfile);
             string line;
@@ -971,7 +971,7 @@ c_Sim::c_Sim(string filename_solo, string speciesfile_solo, string workingdir, s
         
     }
     
-    cout<<"TOTAL SOLAR HEATING / Flux = "<<templumi<<" Luminosity = "<<(templumi*4.*pi*rsolar*rsolar*pi)<<" | T_irr  = "<<pow(templumi/sigma_rad,0.25) <<" T_eq = "<<pow(templumi/sigma_rad/4,0.25) <<" Teq/2**0.25 = "<<pow(templumi/sigma_rad/8,0.25)<<endl;
+    cout<<"TOTAL SOLAR HEATING / Flux = "<<templumi<<" Luminosity = "<<(templumi*4.*pi*planet_semimajor*au*planet_semimajor*au)<<" | T_irr  = "<<pow(templumi/sigma_rad,0.25) <<" T_eq = "<<pow(templumi/sigma_rad/4,0.25) <<" Teq/2**0.25 = "<<pow(templumi/sigma_rad/8,0.25)<<endl;
     
     double totallumi = 0;
     double totallumiincr = 0;
@@ -990,6 +990,7 @@ c_Sim::c_Sim(string filename_solo, string speciesfile_solo, string workingdir, s
         for (int b=0; b < num_bands_in; b++)
             T_planet += 0.25*solar_heating(b) ;      
         T_planet = pow(T_planet/sigma_rad, 0.25) ;
+        cout<<"T_planet initialized = "<<T_planet<<endl;
     }
 
     total_opacity        = Eigen::MatrixXd::Zero(num_cells+2, num_bands_out);
@@ -1308,7 +1309,8 @@ c_Species::c_Species(c_Sim *base_simulation, string filename, string species_fil
             eos->compute_conserved(&p, &BACKGROUND_U, 1);
             
             initialize_background(BACKGROUND_U);
-            
+            cout<<"======== Species["<<species_index<<"] initialized problem 2. with rho"<<BACKGROUND_U.u1<<endl;
+
             //
             // If we want to initialize a hydrostatic atmosphere, then we overwrite the so far given density/pressure data and set every velocity to 0
             //
@@ -1930,7 +1932,7 @@ void c_Species::apply_boundary_left(std::vector<AOS>& u) {
             break;
         case BoundaryType::fixed:
             for (int i=0; i < num_ghosts; i++) {
-                
+            //for (int i=num_ghosts; i > 0; i--) {    
                 /*double dens_wall;  
                 if(base->problem_number == 1)
                     dens_wall = SHOCK_TUBE_UL.u1 * mass_amu;
@@ -1939,15 +1941,28 @@ void c_Species::apply_boundary_left(std::vector<AOS>& u) {
                 }*/
                 double dens_wall;
                 AOS_prim prim;
+                //AOS_prim prim_act;
+                //int iact = num_ghosts + 1;
+                //eos->compute_primitive(&u[iact], &prim_act, 1) ;
+                //eos->compute_auxillary(&prim_act, 1) ;
+                //eos->compute_primitive(&u[i],&prim, 1) ;
                 if(base->problem_number == 1)
                     dens_wall = SHOCK_TUBE_UL.u1;
                 else {
                     prim.density = BACKGROUND_U.u1;
-		    if(this->prim[2].speed < 0)
-			prim.speed = -this->prim[2].speed * base->wavedamp_factor;
-		    else
-	                prim.speed   = this->prim[2].speed;
-                    prim.temperature = const_T_space;
+                    //double dphi = (base->phi[i]*K_zzf[i] - base->phi[i-1]*K_zzf[i-1]) / (base->dx[i-1] + base->dx[i]) ;
+                    //dphi       *= (base->omegaplus[i]*base->dx[i] + base->omegaminus[i-1]*base->dx[i-1]) ;
+                    //prim.pres   = prim.pres + prim.density * dphi ;
+                    //prim.pres   = std::max( prim.pres, 0.0) ;
+                    //prim.speed = u[i].u2/u[i].u1;
+                    //eos->compute_conserved(&prim, &u[i-1], 1) ;
+                    
+                    if(this->prim[2].speed < 0)
+                        prim.speed = -this->prim[2].speed * base->wavedamp_factor;
+                    else
+	                    prim.speed   = this->prim[2].speed;
+                    prim.temperature =  this->prim[2].temperature;
+                    //prim.temperature = const_T_space;
                 }
                 
                 eos->update_eint_from_T(&(prim), 1);

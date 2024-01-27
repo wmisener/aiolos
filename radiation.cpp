@@ -271,13 +271,16 @@ void c_Sim::update_dS_jb(int j, int b) {
                     // Planetary heating 2
                     //
 
-                    if(use_planetary_temperature == 1){ //Discontinued use due to new radiative boundaries
-                        
-                        double lum = 1.0 * sigma_rad * T_int*T_int*T_int*T_int * 0.5;
+                    if(use_planetary_temperature == 1){ //Discontinued use due to new radiative boundaries //WM reactivated  
+                        double lum = 1.0 * sigma_rad * T_int*T_int*T_int*T_int; // * 0.5
                         //Spread the luminosity for fewer crashes
+                        //cout<<"T_int"<<T_int<<endl;
+                        //cout<<"Before dS_band 2 = dS_band(2,b)"<<dS_band(2,b)<<endl;
                         dS_band(2,b) += 3./6. * lum / (dx[2]); 
                         dS_band(3,b) += 2./6. * lum / (dx[3]); 
                         dS_band(4,b) += 1./6. * lum / (dx[4]);
+                        //cout<<"Planetary flux added = "<<lum<<endl;
+                        //cout<<"After dS_band 2 = dS_band(2,b)"<<dS_band(2,b)<<endl;
                     }
                     
                 }// Irregular dS computation, in case we want to fix the solar heating function to its initial value
@@ -449,12 +452,13 @@ void c_Sim::update_fluxes_FLD() {
             int idx_r = j*num_vars + b ;
 
             // Compute heating due to radiation reaching surface
-            if (j == num_ghosts-1 && use_planetary_temperature) {
+            if (j == num_ghosts-1 && use_planetary_temperature && false) {
                 double S ;
                 S = sigma_rad * pow(T_planet,4.) * compute_planck_function_integral3(l_i_out[b], l_i_out[b+1], std::abs(T_planet)) ;  
                 if (T_planet < 0) 
                     S *= -1 ; 
 
+                cout<<"Planet temp "<<T_planet<<" Heating "<<S<<" Cell "<<j<<endl;
 
                 double dx      = (x_i12[j+1]-x_i12[j]) ;
                 double rhokr   = max(2.*(total_opacity(j,b)*total_opacity(j+1,b))/(total_opacity(j,b) + total_opacity(j+1,b)), 4./3./dx );
@@ -464,11 +468,14 @@ void c_Sim::update_fluxes_FLD() {
 
                 D_core[b]    = flux_limiter(R) * tau_inv;
                 double Chi   = 0.25 ;// Chi = 0.125*(1 + 3*K/J(R)) where K/J = 1/3 is appropriate at a solid surface
-                
+                cout<<"Flux-limiter: R "<<R<<" lambda(R) "<<flux_limiter(R)<<" D_core "<<D_core[b]<<endl;
+
                 l[idx] = 0 ;
                 d[idx] =  0.5*(D_core[b] + Chi) * surf[j] ;
                 u[idx] = -0.5*(D_core[b] - Chi) * surf[j] ;
                 r[idx_r] = surf[j] * S / (4*pi) ;
+                cout<<"r "<<r[idx_r]<<" idx_r "<<idx_r<<endl;
+
             } else {
                 l[idx] = 0 ;
                 u[idx] = -d[idx] ;
@@ -810,14 +817,14 @@ void c_Sim::update_fluxes_FLD() {
     // T_planet^4 term and writing dT/dt = T_n - T_planet we have:
     //     C_V \Delta (T_n - T_planet) / dt = 
     //           S_surf + sigma T_int^4 - F + 4 \sigma T_planet^3 (T_planet - T_n)
-    if (use_planetary_temperature) {
+    if (use_planetary_temperature && false) { //WM: I don't want the planet to cool self-consistently, so turning this off
         double F = 0, S_surf = 0 ;
         for(int b=0; b<num_bands_out; b++) {
             F -= 4*pi * D_core[b] * (Jrad_FLD(num_ghosts, b) - Jrad_FLD(num_ghosts-1, b)) ;
             S_surf += 0.25 * S_band(num_ghosts-1,b) ;
         }
         double S_tot = S_surf - F + sigma_rad*(T_int*T_int)*(T_int*T_int); 
-        //std::cout << T_planet <<" " << S_surf - F << " " << sigma_rad*(T_int*T_int)*(T_int*T_int) << " " << S_tot <<  "\n" ;
+        cout<<"T_planet "<<T_planet<<"num_ghosts"<<num_ghosts<<" J_rad ghosts "<<Jrad_FLD(num_ghosts, 0)<<" J_rad ghosts-1 "<<Jrad_FLD(num_ghosts-1, 0)<<" F "<<F<<" S_surf "<<S_surf<<" T_int "<<T_int<<" S_tot "<<S_tot<<endl;
 
         if (core_cv > 0) { 
             double denom = 4*sigma_rad*T_planet*T_planet*T_planet + core_cv / dt ;  
@@ -825,6 +832,7 @@ void c_Sim::update_fluxes_FLD() {
         }
         else { // No need to linearize when core_cv = 0.
             T_planet = pow(pow(T_planet, 4) + S_tot/sigma_rad, 0.25) ;
+            cout<<"New T_planet "<<T_planet<<endl;
         }
     }
 

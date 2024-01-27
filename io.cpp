@@ -131,13 +131,13 @@ int c_Species::read_species_data(string filename, int species_index) {
         read_opacity_table(opacityinputfile);
     }
     
-    if(base->opacity_model == 'P' || base->opacity_model == 'M' || base->opacity_model == 'C' || base->opacity_model == 'K' ) {
+    if(base->opacity_model == 'P' || base->opacity_model == 'M' || base->opacity_model == 'C' || base->opacity_model == 'K' || base->opacity_model == 'U') {
         
         
         if( base->opacity_model == 'K' ) //Run the routine with one argument further on in the species list 
             opacity_data_string = opacity_corrk_string;
         
-        cout<<"P or M or C or K opacity chosen & enough data to read in files. Reading file = "<<"inputdata/"<<opacity_data_string<<endl;
+        cout<<"P, M, C, K, or U opacity chosen & enough data to read in files. Reading file = "<<"inputdata/"<<opacity_data_string<<endl;
         //
         // Start reading opacity data
         //

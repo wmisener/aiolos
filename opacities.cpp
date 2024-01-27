@@ -106,7 +106,23 @@ void c_Species::update_opacities() {
 
     if (base->opacity_model == 'U') {
         // User-defined opacities
-        user_opacity() ;
+        //user_opacity() ;
+                
+        for(int j=0; j< num_cells+2; j++) {
+            
+            for(int b=0; b<num_bands_in; b++) {
+
+                opacity_twotemp(j,b)= base->const_opacity_solar_factor * opacity_avg_solar(b); // (1. + pressure_broadening_factor * pow(prim[j].pres/1e5, pressure_broadening_exponent)); 
+                
+            }
+            for(int b=0; b<num_bands_out; b++) {
+                opacity(j,b)        = base->const_opacity_rosseland_factor * 0.1*pow((prim[j].density/1.e-3),0.6); //Freedman scaling for Rosseland mean
+                //opacity(j,b)         = base->const_opacity_rosseland_factor * opacity_avg_rosseland(b);// * (1. + pressure_broadening_factor * pow(prim[j].pres/1e5, pressure_broadening_exponent)); 
+
+                opacity_planck(j,b)  = base->const_opacity_planck_factor * opacity_avg_planck(b);// * 1./(1. + 1./(prim[j].pres/pressure_broadening_factor)); //(1. + pressure_broadening_factor * pow(prim[j].pres/1e5, pressure_broadening_exponent)); 
+                
+            }     
+        }
     } 
     else if(base->opacity_model == 'P') {
         
@@ -118,16 +134,17 @@ void c_Species::update_opacities() {
                 for(int b=0; b<num_bands_in; b++) {
                     opacity_twotemp(j,b) = base->const_opacity_solar_factor * opacity_avg_solar(b);// * (1. + pressure_broadening_factor * pow(prim[j].pres/1e5, pressure_broadening_exponent)); 
                     //////commented the pressure broadening out for now, as it's eating up a lot of computing time (15% total) with 5 bands in 1 band out, for no effect
-	            if(this_species_index == htwo_idx || this_species_index == c_idx || this_species_index == o_idx)
-                        opacity_twotemp(j, num_bands_in-1) = base->const_opacity_solar_h2;
+	            //if(this_species_index == htwo_idx || this_species_index == c_idx || this_species_index == o_idx) {
+                //        opacity_twotemp(j, num_bands_in-1) = base->const_opacity_solar_h2;
+                //    }
                 }
                 for(int b=0; b<num_bands_out; b++) {
                     opacity(j,b)         = base->const_opacity_rosseland_factor * opacity_avg_rosseland(b);// * (1. + pressure_broadening_factor * pow(prim[j].pres/1e5, pressure_broadening_exponent)); 
-                    opacity_planck(j,b)  = base->const_opacity_planck_factor * opacity_avg_planck(b) * 1./(1. + 1./(prim[j].pres/pressure_broadening_factor)); //(1. + pressure_broadening_factor * pow(prim[j].pres/1e5, pressure_broadening_exponent)); 
-	            if(this_species_index == htwo_idx || this_species_index == c_idx || this_species_index == o_idx) {
-                        opacity(j, num_bands_out-1)        = base->const_opacity_rosseland_h2;
-                        opacity_planck(j, num_bands_out-1) = base->const_opacity_planck_h2;			
-		    }
+                    opacity_planck(j,b)  = base->const_opacity_planck_factor * opacity_avg_planck(b);// * 1./(1. + 1./(prim[j].pres/pressure_broadening_factor)); //(1. + pressure_broadening_factor * pow(prim[j].pres/1e5, pressure_broadening_exponent)); 
+	            //if(this_species_index == htwo_idx || this_species_index == c_idx || this_species_index == o_idx) {
+                //        opacity(j, num_bands_out-1)        = base->const_opacity_rosseland_h2;
+                //        opacity_planck(j, num_bands_out-1) = base->const_opacity_planck_h2;			
+		        //    }
                 }
             }
 

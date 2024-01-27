@@ -1057,12 +1057,12 @@ void  c_Sim::do_highenergy_cooling(int cell) {
     double red = beta * mul;
 
     if(steps==200 && cell==100)
-	cout<<" HI 200 STEPS AND 100 CELLS pos 1"<<endl;
+        cout<<" HI 200 STEPS AND 100 CELLS pos 1"<<endl;
 	// cout<<cell<<" = j, tau ="<<tau<<" beta = "<<beta<<" red = "<<red<<" photocool_multiplier = "<<photocooling_multiplier<<endl;
 
     for(int s=0; s<num_species; s++) //Safety test: set all factors to zero
-       species[s].dG(cell)=0;
-    
+        species[s].dG(cell)=0;
+
     if (e_idx > -1) {
          
         double ne = species[e_idx].prim[cell].number_density;
@@ -1161,12 +1161,10 @@ void  c_Sim::do_highenergy_cooling(int cell) {
 
 	if(steps==200 && cell==100)
               cout<<" HI 200 STEPS AND 100 CELLS AND WE HAVE ELECTRONS, pos3 FINAL totalcool = "<<species[e_idx].dG(cell)<<endl;
-    }
-
 
     if(steps==200 && cell==100)
               cout<<" HI 200 STEPS AND 100 CELLS AFTER ALL COOL, pos4 dG[electrons] = "<<species[e_idx].dG(cell)<<endl;
-
+    
     if(steps == 200 && cell==100) {
         for(int s=0; s<num_species; s++)
             cout<<"in highenergy cooling, cooling s = "<<species[s].speciesname<<" = "<< species[s].dG(cell)<<" + " << species[s].dGdT(cell)<<endl;
@@ -1190,7 +1188,7 @@ void  c_Sim::do_highenergy_cooling(int cell) {
 	//char a;
 	//cin>>a;
     }
-        
+    }
 }
 
 /* Specialied one- or few-reaction solver for a limited number of ndots.
